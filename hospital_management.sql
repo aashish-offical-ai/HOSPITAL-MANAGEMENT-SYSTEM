@@ -554,5 +554,3 @@ FROM Patients p
 LEFT JOIN Appointments a ON a.patient_id = p.patient_id
 LEFT JOIN Doctors d ON d.doctor_id = a.doctor_id
 ORDER BY p.patient_id, a.appointment_date;
-
--- End of script.
