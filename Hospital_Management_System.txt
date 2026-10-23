@@ -1,16 +1,5 @@
 HOSPITAL MANAGEMENT SYSTEM
-MYSQL QUESTIONS, ANSWERS, SAMPLE OUTPUTS & REASONS
 =================================================
-
-IMPORTANT NOTES
----------------
-1. This document matches the sample data and SQL script created for the project.
-2. The outputs below are expected/sample outputs based on that sample data. They have NOT been captured from a live MySQL server, so please run each query in MySQL Workbench to confirm the exact result grid.
-3. MySQL 8.0+ is recommended.
-4. Dates using CURRENT_DATE can change over time, so those result sets may differ depending on the date when you run the query.
-5. Currency values are in INR (₹).
-6. At the beginning, run hospital_management.sql to create the database, tables and sample data.
-
 DATABASE TABLES
 ---------------
 1. Patients             - patient details
