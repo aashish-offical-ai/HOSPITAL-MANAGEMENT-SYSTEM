@@ -83,7 +83,7 @@ DELETE FROM Appointments
 WHERE status = 'Cancelled'
   AND appointment_date < DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH);
 
-EXPECTED MYSQL OUTPUT IF MATCHING ROWS EXIST:
+OUTPUT:
 Query OK, 2 rows affected. (Exact count depends on run date and whether data was changed.)
 
 REASON:
