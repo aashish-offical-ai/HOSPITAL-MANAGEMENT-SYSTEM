@@ -1,0 +1,1112 @@
+HOSPITAL MANAGEMENT SYSTEM
+MYSQL QUESTIONS, ANSWERS, SAMPLE OUTPUTS & REASONS
+=================================================
+
+IMPORTANT NOTES
+---------------
+1. This document matches the sample data and SQL script created for the project.
+2. The outputs below are expected/sample outputs based on that sample data. They have NOT been captured from a live MySQL server, so please run each query in MySQL Workbench to confirm the exact result grid.
+3. MySQL 8.0+ is recommended.
+4. Dates using CURRENT_DATE can change over time, so those result sets may differ depending on the date when you run the query.
+5. Currency values are in INR (₹).
+6. At the beginning, run hospital_management.sql to create the database, tables and sample data.
+
+DATABASE TABLES
+---------------
+1. Patients             - patient details
+2. Doctors              - doctor details, specialization, fees, experience
+3. Appointments         - appointments and status
+4. Medical_Records      - diagnoses, prescriptions and treatment dates
+5. Billing              - invoices and payment status
+6. Departments          - hospital departments
+7. Doctor_Department    - mapping between doctors and departments
+
+------------------------------------------------------------
+TASK 1: IMPLEMENT CRUD OPERATIONS
+------------------------------------------------------------
+
+Q1(a). INSERT a new patient.
+ANSWER:
+INSERT INTO Patients
+(name, dob, gender, phone_number, email, address, registration_date)
+VALUES
+('Test Patient', '2000-01-01', 'Other', NULL,
+ 'test.patient@example.com', 'Surat', CURRENT_DATE);
+
+OUTPUT:
+Query OK, 1 row affected.
+
+REASON:
+INSERT adds a new row to the Patients table. The patient_id is generated automatically because it is AUTO_INCREMENT.
+
+Q1(b). READ / display patients.
+ANSWER:
+SELECT patient_id, name, dob, gender, phone_number, email, address, registration_date
+FROM Patients
+ORDER BY patient_id;
+
+OUTPUT (first rows):
++------------+---------------+------------+--------+--------------+---------------------------+-------------------+-------------------+
+| patient_id | name          | dob        | gender | phone_number | email                     | address           | registration_date |
++------------+---------------+------------+--------+--------------+---------------------------+-------------------+-------------------+
+|          1 | Aarav Shah    | 1990-04-12 | Male   | 9876501001   | aarav.shah@example.com    | Adajan, Surat     | 2025-01-15        |
+|          2 | Diya Patel    | 1985-09-23 | Female | 9876501002   | diya.patel@example.com    | Vesu, Surat       | 2025-03-10        |
+|          3 | Kabir Mehta   | 2001-02-08 | Male   | 9876501003   | kabir.mehta@example.com   | City Light, Surat | 2024-06-20        |
+|          4 | Anaya Desai   | 1978-12-01 | Female | 9876501004   | anaya.desai@example.com   | Piplod, Surat     | 2025-07-05        |
+|          5 | Ishaan Joshi  | 1995-06-17 | Male   | NULL         | ishaan.joshi@example.com  | Pal, Surat        | 2023-11-18        |
+|          6 | Meera Trivedi | 1969-03-29 | Female | 9876501006   | meera.trivedi@example.com | Athwa, Surat      | 2026-02-11        |
+|          7 | Rohan Shah    | 2004-08-14 | Male   | 9876501007   | rohan.shah@example.com    | Udhna, Surat      | 2026-04-22        |
+|          8 | Sara Khan     | 1992-10-30 | Female | 9876501008   | sara.khan@example.com     | Dumas Road, Surat | 2024-12-03        |
+|          9 | Vivaan Kapoor | 1988-01-19 | Male   | 9876501009   | vivaan.kapoor@example.com | Varachha, Surat   | 2025-09-12        |
+|         10 | Nisha Rao     | 1999-07-07 | Female | 9876501010   | nisha.rao@example.com     | Katargam, Surat   | 2026-06-01        |
+|         11 | Arjun Nair    | 1972-05-25 | Male   | 9876501011   | arjun.nair@example.com    | Pal, Surat        | 2023-05-14        |
+|         12 | Tara Shah     | 2003-11-11 | Other  | 9876501012   | tara.shah@example.com     | Vesu, Surat       | 2026-08-02        |
++------------+---------------+------------+--------+--------------+---------------------------+-------------------+-------------------+
+12 rows in set (0.006 sec)
+
+REASON:
+SELECT retrieves rows. ORDER BY patient_id displays them in ascending ID order.
+
+Q1(c). UPDATE a patient's address.
+ANSWER:
+UPDATE Patients
+SET address = 'New Address, Surat'
+WHERE patient_id = 1;
+
+OUTPUT :
+Query OK, 1 row affected.
+
+REASON:
+UPDATE modifies an existing record. WHERE patient_id = 1 ensures that only patient 1 is updated. Without WHERE, every patient's address could be changed.
+
+Q1(d). Find cancelled appointments older than six months.
+ANSWER:
+SELECT appointment_id, patient_id, appointment_date, status
+FROM Appointments
+WHERE status = 'Cancelled'
+  AND appointment_date < DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH);
+
+OUTPUT :
+This result depends on CURRENT_DATE. With the sample dates and a run date in October 2026, cancelled appointments dated before approximately 23-Apr-2026 are returned. The sample cancelled appointments are IDs 6 and 19.
+
+OPTIONAL DELETE:
+DELETE FROM Appointments
+WHERE status = 'Cancelled'
+  AND appointment_date < DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH);
+
+EXPECTED MYSQL OUTPUT IF MATCHING ROWS EXIST:
+Query OK, 2 rows affected. (Exact count depends on run date and whether data was changed.)
+
+REASON:
+DATE_SUB calculates the date six months before today. The DELETE is commented in the main SQL script because deletion is destructive. Run the SELECT preview first.
+
+------------------------------------------------------------
+TASK 2: WHERE, HAVING, LIMIT
+------------------------------------------------------------
+
+Q2(a). Find patients registered in the last year.
+ANSWER:
+SELECT patient_id, name, registration_date
+FROM Patients
+WHERE registration_date >= DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)
+ORDER BY registration_date DESC;
+
+OUTPUT :
++------------+---------------+-------------------+
+| patient_id | name          | registration_date |
++------------+---------------+-------------------+
+|         12 | Tara Shah     | 2026-08-02        |
+|         10 | Nisha Rao     | 2026-06-01        |
+|          7 | Rohan Shah    | 2026-04-22        |
+|          6 | Meera Trivedi | 2026-02-11        |
++------------+---------------+-------------------+
+4 rows in set (0.004 sec)
+
+REASON:
+WHERE filters patients registered on or after the date one year ago. ORDER BY ... DESC shows the newest registration first. Results change with the current date.
+
+Q2(b). Find the top five highest-paying patients.
+ANSWER:
+SELECT p.patient_id, p.name, SUM(b.amount) AS total_billed
+FROM Patients p
+JOIN Billing b ON b.patient_id = p.patient_id
+WHERE b.payment_status <> 'Cancelled'
+GROUP BY p.patient_id, p.name
+HAVING SUM(b.amount) > 0
+ORDER BY total_billed DESC
+LIMIT 5;
+
+OUTPUT ::
++------------+---------------+--------------+
+| patient_id | name          | total_billed |
++------------+---------------+--------------+
+|          2 | Diya Patel    |      3400.00 |
+|          4 | Anaya Desai   |      3100.00 |
+|          6 | Meera Trivedi |      3100.00 |
+|          1 | Aarav Shah    |      3000.00 |
+|          3 | Kabir Mehta   |      2500.00 |
++------------+---------------+--------------+
+5 rows in set (0.012 sec)
+
+REASON:
+SUM adds each patient's invoice amounts. GROUP BY creates one group per patient. HAVING filters grouped totals. ORDER BY sorts totals from largest to smallest. LIMIT returns only five rows.
+
+Q2(c). Find doctors charging more than ₹1,000.
+ANSWER:
+SELECT doctor_id, name, specialization, consultation_fee
+FROM Doctors
+WHERE consultation_fee > 1000
+ORDER BY consultation_fee DESC;
+
+OUTPUT ::
++-----------+------------------+----------------+------------------+
+| doctor_id | name             | specialization | consultation_fee |
++-----------+------------------+----------------+------------------+
+|         2 | Dr. Riya Patel   | Neurology      |          1800.00 |
+|         6 | Dr. Priya Nair   | Cardiology     |          1600.00 |
+|         1 | Dr. Neel Shah    | Cardiology     |          1500.00 |
+|         5 | Dr. Arjun Rao    | Orthopedics    |          1300.00 |
+|         7 | Dr. Dev Malhotra | Neurology      |          1250.00 |
++-----------+------------------+----------------+------------------+
+5 rows in set (0.003 sec)
+
+REASON:
+The greater-than operator (>) selects only fees strictly greater than 1000. A fee of exactly 1000 is not included.
+
+------------------------------------------------------------
+TASK 3: AND, OR, NOT
+------------------------------------------------------------
+
+Q3(a). Find scheduled appointments for doctor_id = 3.
+ANSWER:
+SELECT *
+FROM Appointments
+WHERE status = 'Scheduled' AND doctor_id = 3;
+
+OUTPUT :
+Empty set (0 rows) with the provided sample data.
+
+REASON:
+Both conditions must be true because AND is used. Doctor 3 has no appointment whose status is Scheduled in the provided sample data. An empty result is valid.
+
+Q3(b). Find doctors specializing in Cardiology OR Neurology.
+ANSWER:
+SELECT doctor_id, name, specialization
+FROM Doctors
+WHERE specialization = 'Cardiology' OR specialization = 'Neurology'
+ORDER BY specialization, name;
+
+OUTPUT ::
++-----------+------------------+----------------+
+| doctor_id | name             | specialization |
++-----------+------------------+----------------+
+|         1 | Dr. Neel Shah    | Cardiology     |
+|         6 | Dr. Priya Nair   | Cardiology     |
+|         7 | Dr. Dev Malhotra | Neurology      |
+|         2 | Dr. Riya Patel   | Neurology      |
++-----------+------------------+----------------+
+4 rows in set (0.003 sec)
+
+REASON:
+OR means either condition can be true. The query returns doctors from either of the two specializations.
+
+Q3(c). Find patients who have NOT visited during the past year.
+ANSWER:
+SELECT p.patient_id, p.name
+FROM Patients p
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Appointments a
+    WHERE a.patient_id = p.patient_id
+      AND a.status = 'Completed'
+      AND a.appointment_date >= DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)
+);
+
+OUTPUT ::
++------------+---------------+
+| patient_id | name          |
++------------+---------------+
+|          1 | Aarav Shah    |
+|          3 | Kabir Mehta   |
+|          4 | Anaya Desai   |
+|          5 | Ishaan Joshi  |
+|          7 | Rohan Shah    |
+|          9 | Vivaan Kapoor |
+|         10 | Nisha Rao     |
+|         11 | Arjun Nair    |
+|         12 | Tara Shah     |
++------------+---------------+
+9 rows in set (0.008 sec)
+
+REASON:
+NOT EXISTS checks that no matching recent completed appointment exists for that patient. This query defines a “visit” as a completed appointment.
+
+------------------------------------------------------------
+TASK 4: SORTING AND GROUPING
+------------------------------------------------------------
+
+Q4(a). List doctors sorted by specialization.
+ANSWER:
+SELECT doctor_id, name, specialization
+FROM Doctors
+ORDER BY specialization ASC, name ASC;
+
+OUTPUT : (sample beginning):
++-----------+------------------+------------------+
+| doctor_id | name             | specialization   |
++-----------+------------------+------------------+
+|         1 | Dr. Neel Shah    | Cardiology       |
+|         6 | Dr. Priya Nair   | Cardiology       |
+|         3 | Dr. Karan Mehta  | Dermatology      |
+|         8 | Dr. Maya Iyer    | General Medicine |
+|         7 | Dr. Dev Malhotra | Neurology        |
+|         2 | Dr. Riya Patel   | Neurology        |
+|         5 | Dr. Arjun Rao    | Orthopedics      |
+|         4 | Dr. Sana Desai   | Pediatrics       |
++-----------+------------------+------------------+
+8 rows in set (0.005 sec)
+
+REASON:
+ORDER BY specialization ASC sorts specializations alphabetically. The second key sorts doctor names within each specialization.
+
+Q4(b). Count appointments assigned to each doctor.
+ANSWER:
+SELECT d.doctor_id, d.name, COUNT(a.appointment_id) AS appointment_count
+FROM Doctors d
+LEFT JOIN Appointments a ON a.doctor_id = d.doctor_id
+GROUP BY d.doctor_id, d.name
+ORDER BY appointment_count DESC, d.name;
+
+OUTPUT ::
++-----------+------------------+-------------------+
+| doctor_id | name             | appointment_count |
++-----------+------------------+-------------------+
+|         3 | Dr. Karan Mehta  |                 4 |
+|         1 | Dr. Neel Shah    |                 4 |
+|         2 | Dr. Riya Patel   |                 4 |
+|         5 | Dr. Arjun Rao    |                 3 |
+|         6 | Dr. Priya Nair   |                 2 |
+|         7 | Dr. Dev Malhotra |                 1 |
+|         8 | Dr. Maya Iyer    |                 1 |
+|         4 | Dr. Sana Desai   |                 1 |
++-----------+------------------+-------------------+
+8 rows in set (0.007 sec)
+
+REASON:
+LEFT JOIN keeps every doctor, even if no appointment exists. COUNT counts appointment IDs. GROUP BY produces one row per doctor.
+
+Q4(c). Show paid revenue by department.
+ANSWER:
+SELECT dep.department_name,
+       COALESCE(SUM(CASE WHEN b.payment_status = 'Paid' THEN b.amount ELSE 0 END), 0) AS paid_revenue
+FROM Departments dep
+LEFT JOIN Doctor_Department dd ON dd.department_id = dep.department_id
+LEFT JOIN Doctors d ON d.doctor_id = dd.doctor_id
+LEFT JOIN Appointments a ON a.doctor_id = d.doctor_id
+LEFT JOIN Billing b ON b.appointment_id = a.appointment_id
+GROUP BY dep.department_id, dep.department_name
+ORDER BY paid_revenue DESC, dep.department_name;
+
+OUTPUT ::
++------------------+--------------+
+| department_name  | paid_revenue |
++------------------+--------------+
+| Cardiology       |      9200.00 |
+| Emergency        |      6000.00 |
+| Orthopedics      |      3900.00 |
+| Dermatology      |      2000.00 |
+| Neurology        |      1800.00 |
+| General Medicine |         0.00 |
+| Pediatrics       |         0.00 |
++------------------+--------------+
+7 rows in set (0.009 sec)
+
+REASON:
+The joins connect departments to doctors, appointments and invoices. CASE counts only Paid invoices; COALESCE turns NULL totals into zero. A doctor assigned to multiple departments can contribute revenue to each department, so these department totals should not be added together as a unique hospital total.
+
+------------------------------------------------------------
+TASK 5: AGGREGATE FUNCTIONS
+------------------------------------------------------------
+
+Q5(a). Find total revenue collected.
+ANSWER:
+SELECT COALESCE(SUM(amount), 0) AS total_revenue_collected
+FROM Billing
+WHERE payment_status = 'Paid';
+
+OUTPUT ::
++-------------------------+
+| total_revenue_collected |
++-------------------------+
+| 16900.00                |
++-------------------------+
+
+REASON:
+SUM adds invoice amounts. The WHERE condition includes only Paid invoices, so pending and cancelled invoices are excluded.
+
+Q5(b). Identify the most visited doctor.
+ANSWER:
+SELECT d.doctor_id, d.name, COUNT(a.appointment_id) AS completed_visits
+FROM Doctors d
+JOIN Appointments a ON a.doctor_id = d.doctor_id
+WHERE a.status = 'Completed'
+GROUP BY d.doctor_id, d.name
+ORDER BY completed_visits DESC
+LIMIT 1;
+
+OUTPUT ::
++-----------+---------------+------------------+
+| doctor_id | name          | completed_visits |
++-----------+---------------+------------------+
+|         1 | Dr. Neel Shah |                4 |
++-----------+---------------+------------------+
+1 row in set (0.011 sec)
+
+REASON:
+COUNT counts completed appointment rows per doctor. GROUP BY groups by doctor. LIMIT 1 returns one top result. To return ties, use RANK() or a subquery matching the maximum count.
+
+Q5(c). Calculate average consultation fee.
+ANSWER:
+SELECT ROUND(AVG(consultation_fee), 2) AS average_consultation_fee
+FROM Doctors;
+
+OUTPUT ::
++---------------------------+
+| average_consultation_fee  |
++---------------------------+
+| 1262.50                   |
++---------------------------+
+
+REASON:
+AVG calculates the arithmetic mean. ROUND(..., 2) displays two decimal places.
+
+Q5(d). Display doctor count, lowest, highest and average fee.
+ANSWER:
+SELECT COUNT(*) AS doctor_count,
+       MIN(consultation_fee) AS lowest_fee,
+       MAX(consultation_fee) AS highest_fee,
+       ROUND(AVG(consultation_fee), 2) AS average_fee
+FROM Doctors;
+
+OUTPUT ::
++--------------+------------+-------------+-------------+
+| doctor_count | lowest_fee | highest_fee | average_fee |
++--------------+------------+-------------+-------------+
+|            8 |     750.00 |     1800.00 |     1262.50 |
++--------------+------------+-------------+-------------+
+1 row in set (0.003 sec)
+
+REASON:
+COUNT counts doctors; MIN and MAX find the smallest and largest fees; AVG finds the mean.
+
+------------------------------------------------------------
+TASK 6: PRIMARY KEY AND FOREIGN KEY RELATIONSHIPS
+------------------------------------------------------------
+
+Q6(a). Check that medical records reference valid patients and doctors.
+ANSWER:
+SELECT mr.record_id, mr.patient_id, mr.doctor_id
+FROM Medical_Records mr
+LEFT JOIN Patients p ON p.patient_id = mr.patient_id
+LEFT JOIN Doctors d ON d.doctor_id = mr.doctor_id
+WHERE p.patient_id IS NULL OR d.doctor_id IS NULL;
+
+OUTPUT ::
+Empty set (0 rows).
+
+REASON:
+Every medical record should reference an existing patient and doctor. Foreign keys enforce this. An empty result means no orphan record was found.
+
+Q6(b). Check that invoices reference valid patients and appointments.
+ANSWER:
+SELECT b.invoice_id, b.patient_id, b.appointment_id
+FROM Billing b
+LEFT JOIN Patients p ON p.patient_id = b.patient_id
+LEFT JOIN Appointments a ON a.appointment_id = b.appointment_id
+WHERE p.patient_id IS NULL OR a.appointment_id IS NULL;
+
+OUTPUT ::
+Empty set (0 rows).
+
+REASON:
+The query searches for invoices whose patient or appointment is missing. The foreign keys prevent such invalid references when enabled.
+
+Q6(c). List declared foreign keys.
+ANSWER:
+SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME,
+       REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+FROM information_schema.KEY_COLUMN_USAGE
+WHERE TABLE_SCHEMA = DATABASE()
+  AND REFERENCED_TABLE_NAME IS NOT NULL
+ORDER BY TABLE_NAME, CONSTRAINT_NAME;
+
+OUTPUT ::
++-------------------+----------------+---------------------------------+-----------------------+------------------------+
+| TABLE_NAME        | COLUMN_NAME    | CONSTRAINT_NAME                 | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME |
++-------------------+----------------+---------------------------------+-----------------------+------------------------+
+| appointments      | doctor_id      | fk_appointments_doctor          | doctors               | doctor_id              |
+| appointments      | patient_id     | fk_appointments_patient         | patients              | patient_id             |
+| billing           | appointment_id | fk_billing_appointment          | appointments          | appointment_id         |
+| billing           | patient_id     | fk_billing_patient              | patients              | patient_id             |
+| doctor_department | department_id  | fk_doctor_department_department | departments           | department_id          |
+| doctor_department | doctor_id      | fk_doctor_department_doctor     | doctors               | doctor_id              |
+| medical_records   | doctor_id      | fk_records_doctor               | doctors               | doctor_id              |
+| medical_records   | patient_id     | fk_records_patient              | patients              | patient_id             |
++-------------------+----------------+---------------------------------+-----------------------+------------------------+
+8 rows in set (0.126 sec)
+
+REASON:
+information_schema contains MySQL metadata. This query inspects declared relationships rather than patient data.
+
+------------------------------------------------------------
+TASK 7: JOINS
+------------------------------------------------------------
+
+Q7(a). Retrieve doctors with department names using INNER JOIN.
+ANSWER:
+SELECT d.doctor_id, d.name AS doctor_name, dep.department_name
+FROM Doctors d
+INNER JOIN Doctor_Department dd ON dd.doctor_id = d.doctor_id
+INNER JOIN Departments dep ON dep.department_id = dd.department_id
+ORDER BY d.name, dep.department_name;
+
+OUTPUT : (sample):
++-----------+------------------+------------------+
+| doctor_id | doctor_name      | department_name  |
++-----------+------------------+------------------+
+|         5 | Dr. Arjun Rao    | Orthopedics      |
+|         7 | Dr. Dev Malhotra | Neurology        |
+|         3 | Dr. Karan Mehta  | Dermatology      |
+|         8 | Dr. Maya Iyer    | General Medicine |
+|         1 | Dr. Neel Shah    | Cardiology       |
+|         1 | Dr. Neel Shah    | Emergency        |
+|         6 | Dr. Priya Nair   | Cardiology       |
+|         2 | Dr. Riya Patel   | Neurology        |
+|         4 | Dr. Sana Desai   | Emergency        |
+|         4 | Dr. Sana Desai   | Pediatrics       |
++-----------+------------------+------------------+
+10 rows in set (0.006 sec)
+
+REASON:
+INNER JOIN returns only rows with matching keys in both tables. Doctors mapped to more than one department appear more than once.
+
+Q7(b). Get patients who have completed appointments using LEFT JOIN.
+ANSWER:
+SELECT DISTINCT p.patient_id, p.name
+FROM Patients p
+LEFT JOIN Appointments a
+    ON a.patient_id = p.patient_id AND a.status = 'Completed'
+WHERE a.appointment_id IS NOT NULL
+ORDER BY p.name;
+
+OUTPUT ::
++------------+---------------+
+| patient_id | name          |
++------------+---------------+
+|          1 | Aarav Shah    |
+|          4 | Anaya Desai   |
+|         11 | Arjun Nair    |
+|          2 | Diya Patel    |
+|          3 | Kabir Mehta   |
+|          6 | Meera Trivedi |
+|          8 | Sara Khan     |
+|          9 | Vivaan Kapoor |
++------------+---------------+
+8 rows in set (0.008 sec)
+
+REASON:
+LEFT JOIN connects patients to completed appointments. The WHERE condition removes patients without a matching completed appointment. Although this uses LEFT JOIN, the filter means the final result contains only matched patients.
+
+Q7(c). Find appointments with no payments/invoice using RIGHT JOIN.
+ANSWER:
+SELECT a.appointment_id, a.patient_id, a.doctor_id, a.status
+FROM Billing b
+RIGHT JOIN Appointments a ON a.appointment_id = b.appointment_id
+WHERE b.invoice_id IS NULL
+ORDER BY a.appointment_id;
+
+OUTPUT ::
+Appointments without a Billing row. In the provided sample, appointment IDs 8, 11, 13 and 20 have no invoice.
+
+REASON:
+RIGHT JOIN keeps all appointments from the right-hand table even when no Billing row matches. NULL invoice_id identifies appointments without an invoice. “No invoice” is not necessarily the same as “unpaid”; pending invoices do have a billing row.
+
+Q7(d). Show all patients and appointments using FULL OUTER JOIN logic.
+ANSWER:
+SELECT p.patient_id, p.name, a.appointment_id, a.status
+FROM Patients p
+LEFT JOIN Appointments a ON a.patient_id = p.patient_id
+UNION
+SELECT p.patient_id, p.name, a.appointment_id, a.status
+FROM Appointments a
+LEFT JOIN Patients p ON p.patient_id = a.patient_id
+ORDER BY patient_id, appointment_id;
+
+OUTPUT ::
++------------+---------------+----------------+-----------+
+| patient_id | name          | appointment_id | status    |
++------------+---------------+----------------+-----------+
+|          1 | Aarav Shah    |              1 | Completed |
+|          1 | Aarav Shah    |              4 | Completed |
+|          1 | Aarav Shah    |             20 | Scheduled |
+|          2 | Diya Patel    |              2 | Completed |
+|          2 | Diya Patel    |             14 | Completed |
+|          3 | Kabir Mehta   |              3 | Completed |
+|          3 | Kabir Mehta   |             15 | Completed |
+|          4 | Anaya Desai   |              5 | Completed |
+|          4 | Anaya Desai   |             16 | Completed |
+|          5 | Ishaan Joshi  |              6 | Cancelled |
+|          6 | Meera Trivedi |              7 | Completed |
+|          6 | Meera Trivedi |             17 | Completed |
+|          7 | Rohan Shah    |              8 | Scheduled |
+|          8 | Sara Khan     |              9 | Completed |
+|          8 | Sara Khan     |             18 | Completed |
+|          9 | Vivaan Kapoor |             10 | Completed |
+|          9 | Vivaan Kapoor |             19 | Cancelled |
+|         10 | Nisha Rao     |             11 | Scheduled |
+|         11 | Arjun Nair    |             12 | Completed |
+|         12 | Tara Shah     |             13 | Scheduled |
++------------+---------------+----------------+-----------+
+20 rows in set (0.007 sec)
+
+REASON:
+MySQL does not directly support FULL OUTER JOIN. UNION combines the two LEFT JOIN result sets and removes duplicate rows. In this schema, foreign keys mean appointments cannot normally reference nonexistent patients.
+
+------------------------------------------------------------
+TASK 8: SUBQUERIES
+------------------------------------------------------------
+
+Q8(a). Find doctors who have handled more than 50 patients.
+ANSWER:
+SELECT d.doctor_id, d.name
+FROM Doctors d
+WHERE (
+    SELECT COUNT(DISTINCT a.patient_id)
+    FROM Appointments a
+    WHERE a.doctor_id = d.doctor_id
+) > 50;
+
+OUTPUT ::
+Empty set (0 rows) with the small sample dataset.
+
+REASON:
+The subquery counts distinct patients for each doctor. No doctor has more than 50 distinct patients in the sample. More sample appointments would be needed to return a row.
+
+Q8(b). Identify patient(s) who spent the most on non-cancelled invoices.
+ANSWER:
+SELECT p.patient_id, p.name, totals.total_spent
+FROM Patients p
+JOIN (
+    SELECT patient_id, SUM(amount) AS total_spent
+    FROM Billing
+    WHERE payment_status <> 'Cancelled'
+    GROUP BY patient_id
+) totals ON totals.patient_id = p.patient_id
+WHERE totals.total_spent = (
+    SELECT MAX(patient_total)
+    FROM (
+        SELECT SUM(amount) AS patient_total
+        FROM Billing
+        WHERE payment_status <> 'Cancelled'
+        GROUP BY patient_id
+    ) x
+);
+
+OUTPUT ::
++------------+------------+-------------+
+| patient_id | name       | total_spent |
++------------+------------+-------------+
+|          2 | Diya Patel |     3400.00 |
++------------+------------+-------------+
+1 row in set (0.023 sec)
+
+REASON:
+The first subquery calculates spending per patient. The inner MAX subquery finds the largest patient total. The outer query returns patient(s) whose total equals that maximum. Cancelled invoices are excluded, while Pending invoices are included.
+
+Q8(c). Find appointments where the doctor specializes in Dermatology.
+ANSWER:
+SELECT a.appointment_id, p.name AS patient_name, d.name AS doctor_name,
+       d.specialization, a.appointment_date, a.status
+FROM Appointments a
+JOIN Doctors d ON d.doctor_id = a.doctor_id
+JOIN Patients p ON p.patient_id = a.patient_id
+WHERE d.specialization = 'Dermatology'
+ORDER BY a.appointment_date;
+
+OUTPUT ::
++----------------+---------------+-----------------+----------------+---------------------+-----------+
+| appointment_id | patient_name  | doctor_name     | specialization | appointment_date    | status    |
++----------------+---------------+-----------------+----------------+---------------------+-----------+
+|              3 | Kabir Mehta   | Dr. Karan Mehta | Dermatology    | 2025-04-10 11:00:00 | Completed |
+|              9 | Sara Khan     | Dr. Karan Mehta | Dermatology    | 2025-12-12 15:00:00 | Completed |
+|             19 | Vivaan Kapoor | Dr. Karan Mehta | Dermatology    | 2026-01-12 10:30:00 | Cancelled |
+|             13 | Tara Shah     | Dr. Karan Mehta | Dermatology    | 2026-08-10 16:00:00 | Scheduled |
++----------------+---------------+-----------------+----------------+---------------------+-----------+
+4 rows in set (0.016 sec)
+
+REASON:
+The joins retrieve patient and doctor names. WHERE filters the result to Dermatology doctors only.
+
+------------------------------------------------------------
+TASK 9: DATE AND TIME FUNCTIONS
+------------------------------------------------------------
+
+Q9(a). Extract month from appointment_date and count visits per month.
+ANSWER:
+SELECT DATE_FORMAT(appointment_date, '%Y-%m') AS appointment_month,
+       COUNT(*) AS appointment_count
+FROM Appointments
+GROUP BY DATE_FORMAT(appointment_date, '%Y-%m')
+ORDER BY appointment_month;
+
+OUTPUT ::
++-------------------+-------------------+
+| appointment_month | appointment_count |
++-------------------+-------------------+
+| 2024-05           |                 1 |
+| 2024-09           |                 1 |
+| 2025-01           |                 1 |
+| 2025-02           |                 1 |
+| 2025-03           |                 1 |
+| 2025-04           |                 1 |
+| 2025-06           |                 1 |
+| 2025-07           |                 1 |
+| 2025-08           |                 1 |
+| 2025-09           |                 1 |
+| 2025-10           |                 1 |
+| 2025-11           |                 1 |
+| 2025-12           |                 1 |
+| 2026-01           |                 1 |
+| 2026-02           |                 1 |
+| 2026-03           |                 1 |
+| 2026-04           |                 1 |
+| 2026-06           |                 1 |
+| 2026-08           |                 1 |
+| 2026-09           |                 1 |
++-------------------+-------------------+
+20 rows in set (0.011 sec)
+
+REASON:
+DATE_FORMAT converts each datetime into a YYYY-MM label. GROUP BY groups appointments by month and COUNT calculates the number in each group.
+
+Q9(b). Calculate hospital stay duration.
+ANSWER:
+SELECT appointment_id, patient_id, admission_date, discharge_date,
+       DATEDIFF(discharge_date, admission_date) AS stay_duration_days
+FROM Appointments
+WHERE admission_date IS NOT NULL AND discharge_date IS NOT NULL
+ORDER BY admission_date;
+
+OUTPUT ::
++----------------+------------+----------------+----------------+--------------------+
+| appointment_id | patient_id | admission_date | discharge_date | stay_duration_days |
++----------------+------------+----------------+----------------+--------------------+
+|             12 |         11 | 2024-05-18     | 2024-05-20     |                  2 |
+|              1 |          1 | 2025-01-20     | 2025-01-22     |                  2 |
+|              5 |          4 | 2025-07-10     | 2025-07-14     |                  4 |
++----------------+------------+----------------+----------------+--------------------+
+3 rows in set (0.006 sec)
+
+REASON:
+DATEDIFF subtracts the first date from the second and returns the number of date boundaries between them. It does not count both admission and discharge dates inclusively.
+
+Q9(c). Format treatment_date as DD-MM-YYYY.
+ANSWER:
+SELECT record_id, patient_id, diagnosis,
+       DATE_FORMAT(treatment_date, '%d-%m-%Y') AS treatment_date_formatted
+FROM Medical_Records
+ORDER BY treatment_date;
+
+OUTPUT :
++-----------+------------+---------------------------+--------------------------+
+| record_id | patient_id | diagnosis                 | treatment_date_formatted |
++-----------+------------+---------------------------+--------------------------+
+|        19 |         11 | Shoulder pain             | 18-05-2024               |
+|         7 |          3 | Routine cardiac screening | 09-09-2024               |
+|         1 |          1 | Hypertension              | 20-01-2025               |
+|        15 |          8 | Foot pain                 | 22-02-2025               |
+|         4 |          2 | Migraine                  | 15-03-2025               |
+|         6 |          3 | Acne                      | 10-04-2025               |
+|         2 |          1 | High cholesterol          | 02-06-2025               |
+|         8 |          4 | Knee pain                 | 10-07-2025               |
+|        10 |          5 | Neurological assessment   | 01-08-2025               |
+|         9 |          4 | Headache                  | 21-09-2025               |
+|        16 |          9 | Migraine                  | 01-10-2025               |
+|         5 |          2 | Routine cardiac review    | 20-11-2025               |
+|        14 |          8 | Eczema                    | 12-12-2025               |
+|        17 |          9 | Skin irritation           | 12-01-2026               |
+|        11 |          6 | Blood pressure review     | 15-02-2026               |
+|        12 |          6 | Cardiac follow-up         | 01-03-2026               |
+|        13 |          7 | Child wellness visit      | 25-04-2026               |
+|        21 |          1 | Preventive check-up       | 05-05-2026               |
+|        18 |         10 | Seasonal infection        | 05-06-2026               |
+|        22 |          1 | Follow-up consultation    | 10-06-2026               |
+|        23 |          1 | Sleep-related headache    | 10-07-2026               |
+|        20 |         12 | Dermatitis                | 10-08-2026               |
+|         3 |          1 | Migraine                  | 02-09-2026               |
++-----------+------------+---------------------------+--------------------------+
+23 rows in set (0.019 sec)
+
+REASON:
+%d means day, %m means month and %Y means four-digit year.
+
+------------------------------------------------------------
+TASK 10: STRING MANIPULATION FUNCTIONS
+------------------------------------------------------------
+
+Q10(a). Convert patient names to uppercase.
+ANSWER:
+SELECT patient_id, UPPER(name) AS patient_name_uppercase
+FROM Patients
+ORDER BY patient_id;
+
+OUTPUT ::
++------------+------------------------+
+| patient_id | patient_name_uppercase |
++------------+------------------------+
+|          1 | AARAV SHAH             |
+|          2 | DIYA PATEL             |
+|          3 | KABIR MEHTA            |
+|          4 | ANAYA DESAI            |
+|          5 | ISHAAN JOSHI           |
+|          6 | MEERA TRIVEDI          |
+|          7 | ROHAN SHAH             |
+|          8 | SARA KHAN              |
+|          9 | VIVAAN KAPOOR          |
+|         10 | NISHA RAO              |
+|         11 | ARJUN NAIR             |
+|         12 | TARA SHAH              |
++------------+------------------------+
+12 rows in set (0.003 sec)
+
+REASON:
+UPPER converts letters to uppercase for display. It does not permanently change the stored name.
+
+Q10(b). Trim whitespace from doctor names.
+ANSWER:
+SELECT doctor_id, TRIM(name) AS trimmed_doctor_name
+FROM Doctors
+ORDER BY doctor_id;
+
+OUTPUT ::
++-----------+---------------------+
+| doctor_id | trimmed_doctor_name |
++-----------+---------------------+
+|         1 | Dr. Neel Shah       |
+|         2 | Dr. Riya Patel      |
+|         3 | Dr. Karan Mehta     |
+|         4 | Dr. Sana Desai      |
+|         5 | Dr. Arjun Rao       |
+|         6 | Dr. Priya Nair      |
+|         7 | Dr. Dev Malhotra    |
+|         8 | Dr. Maya Iyer       |
++-----------+---------------------+
+8 rows in set (0.003 sec)
+
+REASON:
+TRIM removes leading and trailing spaces. It does not remove spaces between words.
+
+Q10(c). Replace missing phone numbers with "Not Available".
+ANSWER:
+SELECT patient_id, name,
+       COALESCE(NULLIF(TRIM(phone_number), ''), 'Not Available') AS phone_display
+FROM Patients;
+
+REASON:
+TRIM removes extra outside spaces. NULLIF changes an empty string to NULL. COALESCE returns "Not Available" if the phone number is NULL or empty; otherwise it returns the existing number.
+
+OUTPUT : EXAMPLE:
++------------+------------------+---------------+
+| patient_id | name             | phone_display |
++------------+------------------+---------------+
+|          1 | Aarav Shah       | 9876501001    |
+|          2 | Diya Patel       | 9876501002    |
+|          3 | Kabir Mehta      | 9876501003    |
+|          4 | Anaya Desai      | 9876501004    |
+|          5 | Ishaan Joshi     | Not Available |
+|          6 | Meera Trivedi    | 9876501006    |
+|          7 | Rohan Shah       | 9876501007    |
+|          8 | Sara Khan        | 9876501008    |
+|          9 | Vivaan Kapoor    | 9876501009    |
+|         10 | Nisha Rao        | 9876501010    |
+|         11 | Arjun Nair       | 9876501011    |
+|         12 | Tara Shah        | 9876501012    |
+|       1001 | Dr. Neel Shah    | 9123400001    |
+|       1002 | Dr. Riya Patel   | 9123400002    |
+|       1003 | Dr. Karan Mehta  | 9123400003    |
+|       1004 | Dr. Sana Desai   | Not Available |
+|       1005 | Dr. Arjun Rao    | 9123400005    |
+|       1006 | Dr. Priya Nair   | 9123400006    |
+|       1007 | Dr. Dev Malhotra | 9123400007    |
+|       1008 | Dr. Maya Iyer    | 9123400008    |
++------------+------------------+---------------+
+20 rows in set (0.013 sec)
+NOTE:
+The SQL script also includes doctor phone numbers in a UNION result. The alias patient_id in that combined output is only a generic ID column name for the combined display, not a doctor ID.
+
+------------------------------------------------------------
+TASK 11: WINDOW FUNCTIONS (MYSQL 8.0+)
+------------------------------------------------------------
+
+Q11(a). Rank doctors by number of patients treated.
+ANSWER:
+WITH doctor_patient_counts AS (
+    SELECT d.doctor_id, d.name,
+           COUNT(DISTINCT CASE WHEN a.status = 'Completed' THEN a.patient_id END) AS patients_treated
+    FROM Doctors d
+    LEFT JOIN Appointments a ON a.doctor_id = d.doctor_id
+    GROUP BY d.doctor_id, d.name
+)
+SELECT doctor_id, name, patients_treated,
+       RANK() OVER (ORDER BY patients_treated DESC) AS patient_rank
+FROM doctor_patient_counts
+ORDER BY patient_rank, name;
+
+OUTPUT ::
++-----------+------------------+------------------+--------------+
+| doctor_id | name             | patients_treated | patient_rank |
++-----------+------------------+------------------+--------------+
+|         5 | Dr. Arjun Rao    |                3 |            1 |
+|         1 | Dr. Neel Shah    |                3 |            1 |
+|         3 | Dr. Karan Mehta  |                2 |            3 |
+|         6 | Dr. Priya Nair   |                2 |            3 |
+|         2 | Dr. Riya Patel   |                2 |            3 |
+|         7 | Dr. Dev Malhotra |                1 |            6 |
+|         8 | Dr. Maya Iyer    |                0 |            7 |
+|         4 | Dr. Sana Desai   |                0 |            7 |
++-----------+------------------+------------------+--------------+
+8 rows in set (0.027 sec)
+
+REASON:
+RANK() assigns a ranking based on the patient count. Unlike ROW_NUMBER(), equal values share a rank.
+
+Q11(b). Show cumulative revenue per month.
+ANSWER:
+WITH monthly_revenue AS (
+    SELECT DATE_FORMAT(payment_date, '%Y-%m') AS revenue_month,
+           SUM(amount) AS revenue
+    FROM Billing
+    WHERE payment_status = 'Paid' AND payment_date IS NOT NULL
+    GROUP BY DATE_FORMAT(payment_date, '%Y-%m')
+)
+SELECT revenue_month, revenue,
+       SUM(revenue) OVER (ORDER BY revenue_month
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative_revenue
+FROM monthly_revenue
+ORDER BY revenue_month;
+
+OUTPUT ::
++---------------+---------+--------------------+
+| revenue_month | revenue | cumulative_revenue |
++---------------+---------+--------------------+
+| 2024-05       | 1300.00 |            1300.00 |
+| 2024-09       | 1500.00 |            2800.00 |
+| 2025-01       | 1500.00 |            4300.00 |
+| 2025-02       | 1300.00 |            5600.00 |
+| 2025-03       | 1800.00 |            7400.00 |
+| 2025-04       | 1000.00 |            8400.00 |
+| 2025-06       | 1500.00 |            9900.00 |
+| 2025-07       | 1300.00 |           11200.00 |
+| 2025-11       | 1600.00 |           12800.00 |
+| 2025-12       | 1000.00 |           13800.00 |
+| 2026-02       | 1600.00 |           15400.00 |
+| 2026-03       | 1500.00 |           16900.00 |
++---------------+---------+--------------------+
+12 rows in set (0.006 sec)
+
+REASON:
+The first query groups paid invoices by month. The window SUM adds each month's revenue to all earlier months without collapsing the monthly rows.
+
+Q11(c). Display running total of appointments.
+ANSWER:
+SELECT appointment_id, appointment_date, patient_id, doctor_id,
+       COUNT(*) OVER (
+           ORDER BY appointment_date, appointment_id
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) AS running_appointment_total
+FROM Appointments
+ORDER BY appointment_date, appointment_id;
+
+OUTPUT :
++----------------+---------------------+------------+-----------+---------------------------+
+| appointment_id | appointment_date    | patient_id | doctor_id | running_appointment_total |
++----------------+---------------------+------------+-----------+---------------------------+
+|             12 | 2024-05-18 11:30:00 |         11 |         5 |                         1 |
+|             15 | 2024-09-09 10:00:00 |          3 |         1 |                         2 |
+|              1 | 2025-01-20 09:00:00 |          1 |         1 |                         3 |
+|             18 | 2025-02-22 12:00:00 |          8 |         5 |                         4 |
+|              2 | 2025-03-15 10:30:00 |          2 |         2 |                         5 |
+|              3 | 2025-04-10 11:00:00 |          3 |         3 |                         6 |
+|              4 | 2025-06-02 09:30:00 |          1 |         1 |                         7 |
+|              5 | 2025-07-10 12:00:00 |          4 |         5 |                         8 |
+|              6 | 2025-08-01 14:00:00 |          5 |         2 |                         9 |
+|             16 | 2025-09-21 14:30:00 |          4 |         2 |                        10 |
+|             10 | 2025-10-01 13:00:00 |          9 |         7 |                        11 |
+|             14 | 2025-11-20 09:30:00 |          2 |         6 |                        12 |
+|              9 | 2025-12-12 15:00:00 |          8 |         3 |                        13 |
+|             19 | 2026-01-12 10:30:00 |          9 |         3 |                        14 |
+|              7 | 2026-02-15 09:00:00 |          6 |         6 |                        15 |
+|             17 | 2026-03-01 09:00:00 |          6 |         1 |                        16 |
+|              8 | 2026-04-25 10:00:00 |          7 |         4 |                        17 |
+|             11 | 2026-06-05 08:30:00 |         10 |         8 |                        18 |
+|             13 | 2026-08-10 16:00:00 |         12 |         3 |                        19 |
+|             20 | 2026-09-02 11:00:00 |          1 |         2 |                        20 |
++----------------+---------------------+------------+-----------+---------------------------+
+20 rows in set (0.004 sec)
+
+REASON:
+COUNT(*) OVER counts all rows from the first ordered appointment up to the current row. The appointment_id is used as a tie-breaker if dates match.
+
+------------------------------------------------------------
+TASK 12: CASE EXPRESSIONS
+------------------------------------------------------------
+
+Q12(a). Assign Patient_Risk_Level based on number of medical records.
+ANSWER:
+SELECT p.patient_id, p.name, COUNT(mr.record_id) AS medical_record_count,
+       CASE
+           WHEN COUNT(mr.record_id) > 5 THEN 'High'
+           WHEN COUNT(mr.record_id) BETWEEN 3 AND 5 THEN 'Medium'
+           ELSE 'Low'
+       END AS patient_risk_level
+FROM Patients p
+LEFT JOIN Medical_Records mr ON mr.patient_id = p.patient_id
+GROUP BY p.patient_id, p.name
+ORDER BY medical_record_count DESC, p.name;
+
+OUTPUT :
++------------+---------------+----------------------+--------------------+
+| patient_id | name          | medical_record_count | patient_risk_level |
++------------+---------------+----------------------+--------------------+
+|          1 | Aarav Shah    |                    6 | High               |
+|          4 | Anaya Desai   |                    2 | Low                |
+|          2 | Diya Patel    |                    2 | Low                |
+|          3 | Kabir Mehta   |                    2 | Low                |
+|          6 | Meera Trivedi |                    2 | Low                |
+|          8 | Sara Khan     |                    2 | Low                |
+|          9 | Vivaan Kapoor |                    2 | Low                |
+|         11 | Arjun Nair    |                    1 | Low                |
+|          5 | Ishaan Joshi  |                    1 | Low                |
+|         10 | Nisha Rao     |                    1 | Low                |
+|          7 | Rohan Shah    |                    1 | Low                |
+|         12 | Tara Shah     |                    1 | Low                |
++------------+---------------+----------------------+--------------------+
+12 rows in set (0.018 sec)
+
+REASON:
+CASE evaluates conditions in order. More than five records gives High; three to five gives Medium; zero to two gives Low. This is an assignment demonstration only, not a clinical risk assessment.
+
+Q12(b). Categorize doctors by experience.
+ANSWER:
+SELECT doctor_id, name, experience_years,
+       CASE
+           WHEN experience_years > 15 THEN 'Senior'
+           WHEN experience_years BETWEEN 5 AND 15 THEN 'Mid-Level'
+           ELSE 'Junior'
+       END AS experience_category
+FROM Doctors
+ORDER BY experience_years DESC, name;
+
+OUTPUT :
++-----------+------------------+------------------+---------------------+
+| doctor_id | name             | experience_years | experience_category |
++-----------+------------------+------------------+---------------------+
+|         6 | Dr. Priya Nair   |               21 | Senior              |
+|         1 | Dr. Neel Shah    |               18 | Senior              |
+|         5 | Dr. Arjun Rao    |               16 | Senior              |
+|         2 | Dr. Riya Patel   |               12 | Mid-Level           |
+|         8 | Dr. Maya Iyer    |                9 | Mid-Level           |
+|         3 | Dr. Karan Mehta  |                7 | Mid-Level           |
+|         4 | Dr. Sana Desai   |                4 | Junior              |
+|         7 | Dr. Dev Malhotra |                2 | Junior              |
++-----------+------------------+------------------+---------------------+
+8 rows in set (0.009 sec)
+
+REASON:
+CASE places doctors into categories based on experience_years. More than 15 years is Senior; 5 through 15 years is Mid-Level; below 5 years is Junior.
+
+------------------------------------------------------------
+EXTRA REPORTS
+------------------------------------------------------------
+
+E1. Payment status summary.
+ANSWER:
+SELECT payment_status, COUNT(*) AS invoice_count, SUM(amount) AS invoice_amount
+FROM Billing
+GROUP BY payment_status
+ORDER BY payment_status;
+
+OUTPUT :
++----------------+---------------+----------------+
+| payment_status | invoice_count | invoice_amount |
++----------------+---------------+----------------+
+| Paid           |            12 |       16900.00 |
+| Pending        |             2 |        3050.00 |
+| Cancelled      |             2 |        2800.00 |
++----------------+---------------+----------------+
+3 rows in set (0.004 sec)
+
+REASON:
+GROUP BY creates one group per payment status. COUNT counts invoices and SUM totals invoice amounts within each status.
+
+E2. Patient appointment history.
+ANSWER:
+SELECT p.patient_id, p.name, a.appointment_id, a.appointment_date,
+       d.name AS doctor_name, a.status
+FROM Patients p
+LEFT JOIN Appointments a ON a.patient_id = p.patient_id
+LEFT JOIN Doctors d ON d.doctor_id = a.doctor_id
+ORDER BY p.patient_id, a.appointment_date;
+
+OUTPUT :
++------------+---------------+----------------+---------------------+------------------+-----------+
+| patient_id | name          | appointment_id | appointment_date    | doctor_name      | status    |
++------------+---------------+----------------+---------------------+------------------+-----------+
+|          1 | Aarav Shah    |              1 | 2025-01-20 09:00:00 | Dr. Neel Shah    | Completed |
+|          1 | Aarav Shah    |              4 | 2025-06-02 09:30:00 | Dr. Neel Shah    | Completed |
+|          1 | Aarav Shah    |             20 | 2026-09-02 11:00:00 | Dr. Riya Patel   | Scheduled |
+|          2 | Diya Patel    |              2 | 2025-03-15 10:30:00 | Dr. Riya Patel   | Completed |
+|          2 | Diya Patel    |             14 | 2025-11-20 09:30:00 | Dr. Priya Nair   | Completed |
+|          3 | Kabir Mehta   |             15 | 2024-09-09 10:00:00 | Dr. Neel Shah    | Completed |
+|          3 | Kabir Mehta   |              3 | 2025-04-10 11:00:00 | Dr. Karan Mehta  | Completed |
+|          4 | Anaya Desai   |              5 | 2025-07-10 12:00:00 | Dr. Arjun Rao    | Completed |
+|          4 | Anaya Desai   |             16 | 2025-09-21 14:30:00 | Dr. Riya Patel   | Completed |
+|          5 | Ishaan Joshi  |              6 | 2025-08-01 14:00:00 | Dr. Riya Patel   | Cancelled |
+|          6 | Meera Trivedi |              7 | 2026-02-15 09:00:00 | Dr. Priya Nair   | Completed |
+|          6 | Meera Trivedi |             17 | 2026-03-01 09:00:00 | Dr. Neel Shah    | Completed |
+|          7 | Rohan Shah    |              8 | 2026-04-25 10:00:00 | Dr. Sana Desai   | Scheduled |
+|          8 | Sara Khan     |             18 | 2025-02-22 12:00:00 | Dr. Arjun Rao    | Completed |
+|          8 | Sara Khan     |              9 | 2025-12-12 15:00:00 | Dr. Karan Mehta  | Completed |
+|          9 | Vivaan Kapoor |             10 | 2025-10-01 13:00:00 | Dr. Dev Malhotra | Completed |
+|          9 | Vivaan Kapoor |             19 | 2026-01-12 10:30:00 | Dr. Karan Mehta  | Cancelled |
+|         10 | Nisha Rao     |             11 | 2026-06-05 08:30:00 | Dr. Maya Iyer    | Scheduled |
+|         11 | Arjun Nair    |             12 | 2024-05-18 11:30:00 | Dr. Arjun Rao    | Completed |
+|         12 | Tara Shah     |             13 | 2026-08-10 16:00:00 | Dr. Karan Mehta  | Scheduled |
++------------+---------------+----------------+---------------------+------------------+-----------+
+20 rows in set (0.005 sec)
+
+REASON:
+The joins combine patient, appointment and doctor details. LEFT JOIN means patients without appointments can still be displayed.
+
+------------------------------------------------------------
+QUICK DATABASE VERIFICATION
+------------------------------------------------------------
+
+Run:
+USE hospital_management;
+SELECT COUNT(*) AS patients FROM Patients;
+SELECT COUNT(*) AS doctors FROM Doctors;
+SELECT COUNT(*) AS appointments FROM Appointments;
+SELECT COUNT(*) AS medical_records FROM Medical_Records;
+SELECT COUNT(*) AS invoices FROM Billing;
+SELECT COUNT(*) AS departments FROM Departments;
+SELECT COUNT(*) AS doctor_department_links FROM Doctor_Department;
+
+Expected row counts before running the optional INSERT/DELETE examples:
+Patients = 12
+Doctors = 8
+Appointments = 20
+Medical_Records = 23
+Billing = 16
+Departments = 7
+Doctor_Department = 10
